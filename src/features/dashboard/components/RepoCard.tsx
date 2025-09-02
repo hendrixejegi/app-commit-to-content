@@ -2,22 +2,20 @@ import { PushEventSlim } from "../lib/types";
 
 const RepoCard = ({
   activities,
-  username,
-}: {
-  activities: PushEventSlim[];
+}: // username,
+{
+  activities: [number, PushEventSlim][];
   username: string;
 }) => {
+  console.log(Array.isArray(activities));
   return (
     <>
-      {activities.map((activity) => (
-        <div key={activity.id}>
+      {activities.map(([, event]) => (
+        <div key={event.repo.id}>
           <h3>
-            {activity.repo.name} <a href={activity.repo.url}>&#128279;</a>
+            {event.repo.name} <a href={event.repo.url}>&#128279;</a>
           </h3>
-          <p>
-            <span>{activity.payload.size} commits</span>{" "}
-            <span>{activity.payload.push_id}</span>
-          </p>
+          <p>{event.payload.size}</p>
         </div>
       ))}
     </>

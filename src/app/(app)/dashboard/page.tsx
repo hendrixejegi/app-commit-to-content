@@ -2,6 +2,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import getUserActivity from "@/lib/api/github";
 import Header from "@/components/Header";
 import RepoCard from "@/features/dashboard/components/RepoCard";
+import mergeRepos from "@/features/dashboard/lib/mergeRepos";
 
 export default async function Page() {
   // const { userId } = await auth();
@@ -27,13 +28,9 @@ export default async function Page() {
             <h2>Repos</h2>
             <div className="grid grid-cols-2">
               <RepoCard
-                activities={userActivities}
+                activities={mergeRepos(userActivities)}
                 username={user?.username ?? "Dubemmm"}
               />
-              {/* <div>
-                <h3>Todo-App</h3>
-                <p>2 commits</p>
-              </div> */}
             </div>
           </section>
           <section>
