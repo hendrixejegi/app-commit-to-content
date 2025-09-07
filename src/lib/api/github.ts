@@ -12,6 +12,10 @@ type PushEvent = AllEvents[number] & {
     size: number;
     commits: {
       sha: string;
+      author: {
+        email: string;
+        name: string;
+      };
       message: string;
       url: string;
     }[];
@@ -28,7 +32,9 @@ function isPushEvent(event: AllEvents[number]): event is PushEvent {
 
 export default async function getUserActivity(
   username: string
-): Promise<PushEventSlim[]> {
+): Promise<PushEventSlim[] | undefined> {
+  if (username.length === 0) return;
+
   const response = await octokit.request(
     "GET /users/{username}/events/public",
     {
@@ -51,6 +57,7 @@ export default async function getUserActivity(
         sha: c.sha,
         message: c.message,
         url: c.url,
+        author: c.author,
       })),
     },
   }));

@@ -1,5 +1,9 @@
-interface Commit {
+export interface Commit {
   sha: string;
+  author: {
+    email: string;
+    name: string;
+  };
   message: string;
   url: string;
 }

@@ -1,6 +1,8 @@
 import { PushEventSlim } from "./types";
 
-export default function mergeRepos(arr: PushEventSlim[]) {
+export default function mergeRepos(arr: PushEventSlim[] | undefined) {
+  if (!arr) return;
+
   // Group events by repository Id
   const grouped = Map.groupBy(arr, (event) => event.repo.id);
 

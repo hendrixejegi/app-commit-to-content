@@ -1,8 +1,10 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import getUserActivity from "@/lib/api/github";
 import Header from "@/components/Header";
-import RepoCard from "@/features/dashboard/components/RepoCard";
+import RepoCards from "@/features/dashboard/components/RepoCards";
 import mergeRepos from "@/features/dashboard/lib/mergeRepos";
+import { Commit, PushEventSlim } from "@/features/dashboard/lib/types";
+import CommitMessageRenderer from "@/features/dashboard/components/CommitMessage";
 
 export default async function Page() {
   // const { userId } = await auth();
@@ -10,37 +12,57 @@ export default async function Page() {
   // if (!userId) return <div>Sign in to view this page</div>;
 
   const user = await currentUser();
+  const userActivities = await getUserActivity(user?.username ?? "");
 
-  const userActivities = await getUserActivity(user?.username ?? "Duubemmm");
+  const mergedActivities = mergeRepos(userActivities);
+  const totalCommits = calcTotalCommits(mergedActivities);
+  const commitsList = combineAllCommits(mergedActivities);
 
   return (
     <>
       <Header />
       <main className="wrapper">
-        <div className="p-4 space-y-4">
+        <div className="p-6 space-y-8">
           <hgroup>
             <h1>Today&apos;s Activity</h1>
             <p className="text-lg">
-              <strong>5 commits</strong> in 2 repositories
+              <strong>{totalCommits} commits</strong> in{" "}
+              {Array.isArray(mergedActivities) && mergedActivities.length}{" "}
+              repositories
             </p>
           </hgroup>
-          <section>
-            <h2>Repos</h2>
-            <div className="grid grid-cols-2">
-              <RepoCard
-                activities={mergeRepos(userActivities)}
-                username={user?.username ?? "Dubemmm"}
-              />
-            </div>
-          </section>
-          <section>
-            <h2>Commit Feed</h2>
-            <ul>
-              <li>Today I asked again on water it</li>
-            </ul>
-          </section>
+          <RepoCards activities={mergedActivities} />
+          {Array.isArray(commitsList) && (
+            <CommitMessageRenderer commits={commitsList?.slice(0, 4)} />
+          )}
         </div>
       </main>
     </>
   );
+}
+
+function calcTotalCommits(arr: [number, PushEventSlim][] | undefined) {
+  if (!arr) return;
+
+  let totalCommits = 0;
+
+  arr.forEach(([, repo]) => {
+    const numOfCommits = repo.payload.size;
+    totalCommits += numOfCommits;
+  });
+
+  return totalCommits;
+}
+
+function combineAllCommits(arr: [number, PushEventSlim][] | undefined) {
+  if (!arr) return;
+
+  let combinedCommits: Commit[] = [];
+
+  arr.forEach(([, repo]) => {
+    const commits = repo.payload.commits;
+    combinedCommits = combinedCommits.concat(commits);
+  });
+
+  return combinedCommits;
 }
