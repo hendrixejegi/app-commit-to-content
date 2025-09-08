@@ -10,7 +10,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { Commit, PushEventSlim } from "../lib/types";
+import { PushEventSlim } from "../lib/types";
 import { formatRepoName } from "@/lib/utils";
 import PrimaryButton from "@/components/PrimaryButton";
 

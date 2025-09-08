@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import getUserActivity from "@/lib/api/github";
 import Header from "@/components/Header";
 import RepoCards from "@/features/dashboard/components/RepoCards";
@@ -7,10 +7,6 @@ import { Commit, PushEventSlim } from "@/features/dashboard/lib/types";
 import CommitMessageRenderer from "@/features/dashboard/components/CommitMessage";
 
 export default async function Page() {
-  // const { userId } = await auth();
-
-  // if (!userId) return <div>Sign in to view this page</div>;
-
   const user = await currentUser();
   const userActivities = await getUserActivity(user?.username ?? "");
 
