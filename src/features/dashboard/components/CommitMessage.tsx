@@ -10,23 +10,18 @@ import {
   Copy,
   Check,
 } from "lucide-react";
-import { Commit } from "../lib/types";
+import { Commit, PushEventSlim } from "../lib/types";
+import { formatRepoName } from "@/lib/utils";
+import PrimaryButton from "@/components/PrimaryButton";
 
-const CommitMessageRenderer = ({ commits }: { commits: Commit[] }) => {
+const CommitMessageRenderer = ({
+  activities,
+}: {
+  activities: [number, PushEventSlim][] | undefined;
+}) => {
   const [copiedSha, setCopiedSha] = useState<string | null>(null);
 
-  // Sample commit data - replace with your actual GitHub API data
-
-  // const formatDate = (dateString) => {
-  //   const date = new Date(dateString);
-  //   return date.toLocaleString("en-US", {
-  //     year: "numeric",
-  //     month: "short",
-  //     day: "numeric",
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //   });
-  // };
+  if (!activities) return;
 
   const getCommitType = (message: string) => {
     const types = {
@@ -96,105 +91,122 @@ const CommitMessageRenderer = ({ commits }: { commits: Commit[] }) => {
           <GitCommit className="w-8 h-8" />
           Commit Messages
         </h2>
-        <p>Recent commits from the repository</p>
+        <p>Recent commits from the repositories</p>
       </hgroup>
 
-      <div className="space-y-6">
-        {commits.map((commit, idx) => {
-          const { title, body } = parseCommitMessage(commit.message);
-          const commitType = getCommitType(title);
+      <div className="space-y-12">
+        {activities.map((activity) => {
+          const [repoId, pushEvent] = activity;
+          const repoName = formatRepoName(pushEvent.repo.name);
+          const commits = pushEvent.payload.commits;
 
           return (
-            <div
-              key={idx}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-            >
-              {/* Header */}
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium border ${commitType.color}`}
-                      >
-                        {commitType.label}
-                      </span>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Hash className="w-4 h-4" />
-                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                          {shortenSha(commit.sha)}
-                        </code>
-                        <button
-                          onClick={() =>
-                            copyToClipboard(commit.sha, commit.sha)
-                          }
-                          className="p-1 hover:bg-gray-200 rounded transition-colors"
-                          title="Copy full SHA"
-                        >
-                          {copiedSha === commit.sha ? (
-                            <Check className="w-3 h-3 text-green-600" />
-                          ) : (
-                            <Copy className="w-3 h-3" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-tight">
-                      {title}
-                    </h3>
-
-                    {body && (
-                      <div className="prose prose-sm max-w-none">
-                        <pre className="whitespace-pre-wrap text-gray-700 bg-gray-50 p-3 rounded text-sm leading-relaxed border">
-                          {body}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-
-                  <a
-                    href={commit.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    View
-                  </a>
-                </div>
+            <div key={repoId}>
+              <div className="flex items-center justify-between mb-4">
+                <h2>{repoName}</h2>
+                <PrimaryButton>Generate Posts</PrimaryButton>
               </div>
-
-              {/* Footer */}
-              <div className="px-6 py-4 bg-gray-50 flex items-center justify-between text-sm text-gray-600">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span className="font-medium">{commit.author.name}</span>
-                    <span className="text-gray-400">
-                      ({commit.author.email})
-                    </span>
+              <div className="space-y-6">
+                {commits.length === 0 && (
+                  <div className="text-center py-12">
+                    <GitCommit className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No commits to display</p>
                   </div>
-                </div>
+                )}
 
-                {/* <div className="flex items-center gap-2">
+                {commits.map((commit, idx) => {
+                  const { title, body } = parseCommitMessage(commit.message);
+                  const commitType = getCommitType(title);
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    >
+                      {/* Header */}
+                      <div className="p-6 border-b border-gray-100">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-full text-xs font-medium border ${commitType.color}`}
+                              >
+                                {commitType.label}
+                              </span>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Hash className="w-4 h-4" />
+                                <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                  {shortenSha(commit.sha)}
+                                </code>
+                                <button
+                                  onClick={() =>
+                                    copyToClipboard(commit.sha, commit.sha)
+                                  }
+                                  className="p-1 hover:bg-gray-200 rounded transition-colors"
+                                  title="Copy full SHA"
+                                >
+                                  {copiedSha === commit.sha ? (
+                                    <Check className="w-3 h-3 text-green-600" />
+                                  ) : (
+                                    <Copy className="w-3 h-3" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+
+                            <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-tight">
+                              {title}
+                            </h3>
+
+                            {body && (
+                              <div className="prose prose-sm max-w-none">
+                                <pre className="whitespace-pre-wrap text-gray-700 bg-gray-50 p-3 rounded text-sm leading-relaxed border">
+                                  {body}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+
+                          <a
+                            href={commit.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                            View
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="px-6 py-4 bg-gray-50 flex items-center justify-between text-sm text-gray-600">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            <span className="font-medium">
+                              {commit.author.name}
+                            </span>
+                            <span className="text-gray-400">
+                              ({commit.author.email})
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   <time dateTime={commit.author.date}>
                     {formatDate(commit.author.date)}
                   </time>
                 </div> */}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
         })}
       </div>
-
-      {commits.length === 0 && (
-        <div className="text-center py-12">
-          <GitCommit className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600">No commits to display</p>
-        </div>
-      )}
     </section>
   );
 };

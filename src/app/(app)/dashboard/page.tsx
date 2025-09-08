@@ -33,7 +33,7 @@ export default async function Page() {
           </hgroup>
           <RepoCards activities={mergedActivities} />
           {Array.isArray(commitsList) && (
-            <CommitMessageRenderer commits={commitsList?.slice(0, 4)} />
+            <CommitMessageRenderer activities={mergedActivities} />
           )}
         </div>
       </main>

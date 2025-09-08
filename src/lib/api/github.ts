@@ -60,6 +60,10 @@ export default async function getUserActivity(
         author: c.author,
       })),
     },
+    created_at: event.created_at,
+    username: {
+      login: event.actor.display_login ?? username,
+    },
   }));
 
   return pushEvents;

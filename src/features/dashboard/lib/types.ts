@@ -18,4 +18,8 @@ export interface PushEventSlim {
     size: number;
     commits: Commit[];
   };
+  created_at: string | null;
+  username: {
+    login: string;
+  };
 }
